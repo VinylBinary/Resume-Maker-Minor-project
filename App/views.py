@@ -1,20 +1,13 @@
 from django.shortcuts import render,redirect
 from django.contrib import messages
-from django.http import HttpResponseNotFound
-from faunadb import query as q
-import pytz
-from faunadb.objects import Ref
-from faunadb.client import FaunaClient
-import hashlib
-import datetime
+from django.http import HttpResponseNotFound, JsonResponse
 from django.contrib.auth.models import User
 from .models import resume_index
 from django.contrib.auth import authenticate, login
+from django.views.decorators.csrf import csrf_exempt
+from .vertex import content
+import json
 
-
-
-client = FaunaClient(secret="fnAE5xxjPIACWtFG3s-fqA99TA8L8hSi1NfeOmeQ")
-indexes = client.query(q.paginate(q.indexes()))
 
 # Create your views here.
 def index(request):
@@ -57,8 +50,6 @@ def register(request):
             if user is not None:
                 messages.add_message(request, messages.INFO, 'User already exists with that username.')
                 return redirect("App:register")
-            # messages.add_message(request, messages.INFO, 'User already exists with that username.')
-            # return redirect("App:login")
         except:
             user = User.objects.create_user(username, email, password)
             messages.add_message(request, messages.INFO, 'Registration successful.')
@@ -145,7 +136,6 @@ def create_resume(request):
         try:   
             resume_info = resume_index.objects.get(user = user).data
             context={"resume_info":resume_info}
-            print(resume_info)
             return render(request,"create-resume.html",context)
         except:
             return render(request,"create-resume.html")
@@ -157,3 +147,20 @@ def resume(request):
         return render(request,"resume.html",context)
     except:
         return render(request,"resume.html")
+
+@csrf_exempt
+def suggestions(request):
+    print("suggestions")
+    if request.method == "POST":
+        print(request.session["user"]["id"])
+        r = json.loads(request.body)
+        name = r["field"]
+        data = r["text"]        
+        try:
+            context = resume_index.objects.get(user = User.objects.get(id = request.session["user"]["id"])).data
+        except:
+            context = ""
+        body = {"name":name,"data":data,"context":context}
+        resp = content(json.dumps(body))
+        return JsonResponse({"request":resp})
+    

@@ -12,6 +12,7 @@ urlpatterns = [
     path("index", views.index, name="index"),
     path("create-resume", views.create_resume, name="create-resume"),
     path("resume", views.resume, name="resume"),
+    path("generate-suggestions", views.suggestions, name="generate-suggestions"),
 
 
 ]
