@@ -43,3 +43,4 @@ webencodings==0.5.1
 whitenoise==5.2.0
 xhtml2pdf==0.2.5
 gunicorn
+google-genai
